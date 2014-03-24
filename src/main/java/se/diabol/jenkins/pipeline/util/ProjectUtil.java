@@ -17,9 +17,11 @@ If not, see <http://www.gnu.org/licenses/>.
 */
 package se.diabol.jenkins.pipeline.util;
 
+import hudson.EnvVars;
 import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.ItemGroup;
+import hudson.model.Items;
 import hudson.model.TopLevelItem;
 import hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig;
 import hudson.plugins.parameterizedtrigger.SubProjectsAction;
@@ -142,5 +144,23 @@ public final class ProjectUtil {
             return Collections.emptyMap();
         }
     }
+
+    public static List<AbstractProject> getProjectList(String projects, ItemGroup context, EnvVars env) {
+        List<AbstractProject> projectList = new ArrayList<AbstractProject>();
+
+        // expand variables if applicable
+        StringBuilder projectNames = new StringBuilder();
+        StringTokenizer tokens = new StringTokenizer(projects, ",");
+        while (tokens.hasMoreTokens()) {
+            if (projectNames.length() > 0) {
+                projectNames.append(',');
+            }
+            projectNames.append(env != null ? env.expand(tokens.nextToken().trim()) : tokens.nextToken().trim());
+        }
+
+        projectList.addAll(Items.fromNameList(context, projectNames.toString(), AbstractProject.class));
+        return projectList;
+    }
+
 
 }

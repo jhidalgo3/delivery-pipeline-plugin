@@ -23,17 +23,21 @@ import hudson.model.*;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import org.kohsuke.stapler.*;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 import org.kohsuke.stapler.export.Exported;
 import se.diabol.jenkins.pipeline.domain.Component;
 import se.diabol.jenkins.pipeline.domain.Pipeline;
+import se.diabol.jenkins.pipeline.domain.trigger.ManualTrigger;
 import se.diabol.jenkins.pipeline.sort.ComponentComparator;
 import se.diabol.jenkins.pipeline.sort.ComponentComparatorDescriptor;
+import se.diabol.jenkins.pipeline.trigger.ManualTriggerFactory;
 import se.diabol.jenkins.pipeline.util.PipelineUtils;
 import se.diabol.jenkins.pipeline.util.ProjectUtil;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -198,6 +202,25 @@ public class DeliveryPipelineView extends View {
     @Exported
     public String getLastUpdated() {
         return PipelineUtils.formatTimestamp(System.currentTimeMillis());
+    }
+
+    @JavaScriptMethod
+    public void triggerManual(String projectName, String upstreamName, String buildId) {
+        try {
+            LOG.fine("Trigger manual build " + projectName + " " + upstreamName + " " + buildId);
+            AbstractProject project = ProjectUtil.getProject(projectName, getOwnerItemGroup());
+            AbstractProject upstream = ProjectUtil.getProject(upstreamName, getOwnerItemGroup());
+            ManualTrigger trigger = ManualTriggerFactory.getManualTrigger(project, upstream);
+            if (trigger != null) {
+                trigger.triggerManual(projectName, upstreamName, buildId, getOwnerItemGroup());
+            } else {
+                LOG.log(Level.WARNING, "Trigger not found for manual build " + projectName + " for upstream " +
+                        upstreamName + " id: " + buildId);
+            }
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Could not trigger manual build " + projectName + " for upstream " +
+                    upstreamName + " id: " + buildId, e);
+        }
     }
 
 

@@ -18,10 +18,7 @@ If not, see <http://www.gnu.org/licenses/>.
 package se.diabol.jenkins.pipeline.domain;
 
 import hudson.Util;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.ItemGroup;
-import hudson.util.RunList;
+import hudson.model.*;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -46,23 +43,23 @@ public class Task extends AbstractItem {
     private final String link;
     private final TestResult testResult;
     private final Status status;
-    private final boolean manual;
+    private final ManualStep manual;
     private final String buildId;
     private final List<String> downstreamTasks;
 
-    public Task(String id, String name, Status status, String link, List<String> downstreamTasks) {
+    public Task(String id, String name, Status status, String link, ManualStep manual, List<String> downstreamTasks) {
         super(name);
         this.id = id;
         this.link = link;
         this.testResult = null;
         this.status = status;
-        this.manual = false;
+        this.manual = manual;
         this.buildId = null;
         this.downstreamTasks = downstreamTasks;
     }
 
 
-    public Task(Task task, String buildId, Status status, String link, boolean manual,
+    public Task(Task task, String buildId, Status status, String link, ManualStep manual,
                     TestResult testResult) {
         super(task.getName());
         this.id = task.id;
@@ -75,8 +72,13 @@ public class Task extends AbstractItem {
     }
 
     @Exported
-    public boolean isManual() {
+    public ManualStep getManualStep() {
         return manual;
+    }
+
+    @Exported
+    public boolean isManual() {
+        return manual != null;
     }
 
     @Exported
@@ -120,50 +122,36 @@ public class Task extends AbstractItem {
         for (AbstractProject downstreamProject : downstreams) {
             downStreamTasks.add(downstreamProject.getRelativeNameFrom(Jenkins.getInstance()));
         }
-
         return new Task(project.getRelativeNameFrom(Jenkins.getInstance()), taskName, status,
-                Util.fixNull(Jenkins.getInstance().getRootUrl()) + project.getUrl(), downStreamTasks);
+                Util.fixNull(Jenkins.getInstance().getRootUrl()) + project.getUrl(),
+                ManualStep.resolveManualStep(project), downStreamTasks);
     }
 
     public Task getLatestTask(ItemGroup context, AbstractBuild firstBuild) {
         AbstractProject<?, ?> project = getProject(this, context);
-        AbstractBuild build = match(project.getBuilds(), firstBuild);
+        AbstractBuild build = BuildUtil.match(project.getBuilds(), firstBuild);
 
         Status taskStatus = SimpleStatus.resolveStatus(project, build);
         String taskLink = build == null || taskStatus.isIdle() || taskStatus.isQueued() ? this.getLink() : Util.fixNull(Jenkins.getInstance().getRootUrl()) + build.getUrl();
         String taskBuildId = build == null || taskStatus.isIdle() || taskStatus.isQueued() ? null : String.valueOf(build.getNumber());
-        return new Task(this, taskBuildId, taskStatus, taskLink, this.isManual(), TestResult.getTestResult(build));
+        ManualStep manualStep = ManualStep.getManualStepLatest(project, build, firstBuild);
+        return new Task(this, taskBuildId, taskStatus, taskLink, manualStep, TestResult.getTestResult(build));
     }
 
     public Task getAggregatedTask(AbstractBuild versionBuild, ItemGroup context) {
         AbstractProject<?, ?> taskProject = getProject(this, context);
-        AbstractBuild currentBuild = match(taskProject.getBuilds(), versionBuild);
+        AbstractBuild currentBuild = BuildUtil.match(taskProject.getBuilds(), versionBuild);
         if (currentBuild != null) {
             Status taskStatus = SimpleStatus.resolveStatus(taskProject, currentBuild);
             String taskLink = Util.fixNull(Jenkins.getInstance().getRootUrl()) + currentBuild.getUrl();
-            return new Task(this, String.valueOf(currentBuild.getNumber()), taskStatus, taskLink, this.isManual(), TestResult.getTestResult(currentBuild));
+            return new Task(this, String.valueOf(currentBuild.getNumber()), taskStatus, taskLink, this.getManualStep(), TestResult.getTestResult(currentBuild));
         } else {
-            return new Task(this, null, StatusFactory.idle(), this.getLink(), this.isManual(), null);
+            return new Task(this, null, StatusFactory.idle(), this.getLink(), this.getManualStep(), null);
         }
     }
 
     private AbstractProject getProject(Task task, ItemGroup context) {
         return ProjectUtil.getProject(task.getId(), context);
-    }
-
-
-    /**
-     * Returns the build for a projects that has been triggered by the supplied upstream project.
-     */
-    private AbstractBuild match(RunList<? extends AbstractBuild> runList, AbstractBuild firstBuild) {
-        if (firstBuild != null) {
-            for (AbstractBuild currentBuild : runList) {
-                if (firstBuild.equals(BuildUtil.getFirstUpstreamBuild(currentBuild, firstBuild.getProject()))) {
-                    return currentBuild;
-                }
-            }
-        }
-        return null;
     }
 
 
