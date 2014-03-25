@@ -55,8 +55,8 @@ public class LatestActivityComparatorTest {
         pipelinesB.add(pipelineB);
 
 
-        Component componentB = new Component("B", pipelinesB);
-        Component componentA = new Component("A", pipelinesA);
+        Component componentB = new Component("B", "B", pipelinesB);
+        Component componentA = new Component("A", "A", pipelinesA);
         List<Component> list = new ArrayList<Component>();
         list.add(componentB);
         list.add(componentA);

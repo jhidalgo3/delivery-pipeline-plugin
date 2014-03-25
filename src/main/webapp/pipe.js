@@ -1,4 +1,4 @@
-function updatePipelines(divNames, errorDiv, view, showAvatars, showChanges, timeout) {
+function updatePipelines(divNames, errorDiv, view, fullscreen, showChanges, timeout) {
     Q.ajax({
         url: 'api/json',
         dataType: 'json',
@@ -6,9 +6,9 @@ function updatePipelines(divNames, errorDiv, view, showAvatars, showChanges, tim
         cache: false,
         timeout: 20000,
         success: function (data) {
-            refreshPipelines(data, divNames, errorDiv, view, showAvatars, showChanges);
+            refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChanges);
             setTimeout(function () {
-                updatePipelines(divNames, errorDiv, view, showAvatars, showChanges, timeout)
+                updatePipelines(divNames, errorDiv, view, fullscreen, showChanges, timeout)
             }, timeout);
         },
         error: function (xhr, status, error) {
@@ -16,7 +16,7 @@ function updatePipelines(divNames, errorDiv, view, showAvatars, showChanges, tim
             Q("#" + errorDiv).show();
             plumb.repaintEverything();
             setTimeout(function () {
-                updatePipelines(divNames, errorDiv, view, showAvatars, showChanges, timeout)
+                updatePipelines(divNames, errorDiv, view, fullscreen, showChanges, timeout)
             }, timeout);
         }
     });
@@ -25,7 +25,7 @@ function updatePipelines(divNames, errorDiv, view, showAvatars, showChanges, tim
 }
 
 
-function refreshPipelines(data, divNames, errorDiv, view, showAvatars, showChanges) {
+function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChanges) {
     Q("#" + errorDiv).html('');
     Q("#" + errorDiv).hide();
     var lastUpdate = data.lastUpdated;
@@ -45,6 +45,9 @@ function refreshPipelines(data, divNames, errorDiv, view, showAvatars, showChang
             var component = data.pipelines[c];
             var html = "<section class='component'>";
             html = html + "<h1>" + htmlEncode(component.name) + "</h1>";
+            if (!fullscreen) {
+                html = html + '<div class="pipeline-toolbar"><div class="pipeline-toolbar-button button-start" onclick="view.startJob(\'' + component.firstJob + '\');">Start</div></div>'
+            }
             if (component.pipelines.length == 0) {
                 html = html + "No builds done yet.";
             }

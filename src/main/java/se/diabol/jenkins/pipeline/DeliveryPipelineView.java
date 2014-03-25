@@ -27,7 +27,7 @@ import org.kohsuke.stapler.bind.JavaScriptMethod;
 import org.kohsuke.stapler.export.Exported;
 import se.diabol.jenkins.pipeline.domain.Component;
 import se.diabol.jenkins.pipeline.domain.Pipeline;
-import se.diabol.jenkins.pipeline.domain.trigger.ManualTrigger;
+import se.diabol.jenkins.pipeline.trigger.ManualTrigger;
 import se.diabol.jenkins.pipeline.sort.ComponentComparator;
 import se.diabol.jenkins.pipeline.sort.ComponentComparatorDescriptor;
 import se.diabol.jenkins.pipeline.trigger.ManualTriggerFactory;
@@ -105,6 +105,8 @@ public class DeliveryPipelineView extends View {
             this.sorting = sorting;
         }
     }
+
+
 
     public List<ComponentSpec> getComponentSpecs() {
         return componentSpecs;
@@ -204,6 +206,13 @@ public class DeliveryPipelineView extends View {
         return PipelineUtils.formatTimestamp(System.currentTimeMillis());
     }
 
+
+    @JavaScriptMethod
+    public void startJob(String job) {
+        AbstractProject project = ProjectUtil.getProject(job, getOwnerItemGroup());
+        project.scheduleBuild(0, new Cause.UserIdCause());
+    }
+
     @JavaScriptMethod
     public void triggerManual(String projectName, String upstreamName, String buildId) {
         try {
@@ -259,7 +268,7 @@ public class DeliveryPipelineView extends View {
             pipelines.add(pipeline.createPipelineAggregated(getOwnerItemGroup()));
         }
         pipelines.addAll(pipeline.createPipelineLatest(noOfPipelines, getOwnerItemGroup()));
-        return new Component(name, pipelines);
+        return new Component(name, firstJob.getName(), pipelines);
     }
 
     @Override
