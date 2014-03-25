@@ -119,13 +119,22 @@ function refreshPipelines(data, divNames, errorDiv, view, showAvatars, showChang
 
                         html = html + "<div id=\"" + id + "\" class=\"task " + task.status.type +
                             "\"><div class=\"taskname\"><a href=\"" + task.link + "\">" + htmlEncode(task.name) + "</a></div>";
+                        if (task.manual && task.manualStep.enabled) {
+                            html = html + '<div class="task-manual" onclick="view.triggerManual(\'' + task.id + '\', \'' + task.manualStep.upstreamProject + '\', \'' + task.manualStep.upstreamId +'\');">';
+                            html = html + 'Manual!';
+                            html = html + "</div>"
+                        }
+
+                        html = html + '<div class="task-details">';
 
                         if (timestamp != "") {
                             html = html + "<span id=\"" + id + ".timestamp\" class='timestamp'>" + timestamp + "</span>"
                         }
 
-                        if (task.status.duration >= 0)
+                        if (task.status.duration >= 0) {
                             html = html + "<span class='duration'>" + formatDuration(task.status.duration) + "</span>";
+                        }
+                        html = html + '</div>';
 
                         html = html + "</div>"
 

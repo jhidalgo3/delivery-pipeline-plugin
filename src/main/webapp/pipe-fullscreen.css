@@ -236,6 +236,19 @@ div.pipeline-message {
     text-align: center;
 }
 
+div.taskname {
+    float: left;
+}
+
+div.task-details {
+    clear: both;
+}
+
+div.task-manual {
+    float: right;
+    content:url("play.png");
+}
+
 div.left {
     float: left;
 }
