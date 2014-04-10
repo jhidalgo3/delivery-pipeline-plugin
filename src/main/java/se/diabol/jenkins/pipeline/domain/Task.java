@@ -132,7 +132,17 @@ public class Task extends AbstractItem {
         AbstractBuild build = BuildUtil.match(project.getBuilds(), firstBuild);
 
         Status taskStatus = SimpleStatus.resolveStatus(project, build);
-        String taskLink = build == null || taskStatus.isIdle() || taskStatus.isQueued() ? this.getLink() : Util.fixNull(Jenkins.getInstance().getRootUrl()) + build.getUrl();
+        String taskLink;
+        if (build == null || taskStatus.isIdle() || taskStatus.isQueued()) {
+            taskLink = this.getLink();
+        } else {
+            if (taskStatus.isRunning()) {
+                taskLink = Util.fixNull(Jenkins.getInstance().getRootUrl()) + build.getUrl() + "console";
+            } else {
+                taskLink = Util.fixNull(Jenkins.getInstance().getRootUrl()) + build.getUrl();
+            }
+        }
+
         String taskBuildId = build == null || taskStatus.isIdle() || taskStatus.isQueued() ? null : String.valueOf(build.getNumber());
         ManualStep manualStep = ManualStep.getManualStepLatest(project, build, firstBuild);
         return new Task(this, taskBuildId, taskStatus, taskLink, manualStep, TestResult.getTestResult(build));
@@ -144,6 +154,9 @@ public class Task extends AbstractItem {
         if (currentBuild != null) {
             Status taskStatus = SimpleStatus.resolveStatus(taskProject, currentBuild);
             String taskLink = Util.fixNull(Jenkins.getInstance().getRootUrl()) + currentBuild.getUrl();
+            if (taskStatus.isRunning()) {
+                taskLink = Util.fixNull(Jenkins.getInstance().getRootUrl()) + currentBuild.getUrl() + "console";
+            }
             return new Task(this, String.valueOf(currentBuild.getNumber()), taskStatus, taskLink, this.getManualStep(), TestResult.getTestResult(currentBuild));
         } else {
             return new Task(this, null, StatusFactory.idle(), this.getLink(), this.getManualStep(), null);
