@@ -20,7 +20,6 @@ package se.diabol.jenkins.pipeline.domain;
 import au.com.centrumsystems.hudson.plugin.buildpipeline.trigger.BuildPipelineTrigger;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.BuildTrigger;
-import jenkins.model.Jenkins;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.FailureBuilder;
@@ -108,6 +107,57 @@ public class ManualStepTest {
         assertTrue(step.isPermission());
         assertNull(step.getPossibleVersions());
 
+
+    }
+
+    @Test
+    public void testGetManualStepAggregated() throws Exception {
+        FreeStyleProject upstream = jenkins.createFreeStyleProject("upstream");
+        FreeStyleProject downstream = jenkins.createFreeStyleProject("downstream");
+        upstream.getPublishersList().add(new BuildPipelineTrigger("downstream", null));
+        jenkins.getInstance().rebuildDependencyGraph();
+        jenkins.setQuietPeriod(0);
+
+        ManualStep step = ManualStep.getManualStepAggregated(downstream, upstream);
+        assertNotNull(step);
+        assertEquals("upstream", step.getUpstreamProject());
+        assertNull(step.getUpstreamId());
+        assertFalse(step.isEnabled());
+        assertTrue(step.isPermission());
+        assertEquals(0, step.getPossibleVersions().size());
+
+
+        jenkins.buildAndAssertSuccess(upstream);
+        step = ManualStep.getManualStepAggregated(downstream, upstream);
+        assertNotNull(step);
+        assertEquals("upstream", step.getUpstreamProject());
+        assertNull(step.getUpstreamId());
+        assertTrue(step.isEnabled());
+        assertTrue(step.isPermission());
+        assertEquals(1, step.getPossibleVersions().size());
+
+        downstream.getBuildersList().add(new FailureBuilder());
+        DeliveryPipelineView view = new DeliveryPipelineView("hej", jenkins.getInstance());
+        view.triggerManual("downstream", "upstream", "1");
+        jenkins.waitUntilNoActivity();
+
+        step = ManualStep.getManualStepAggregated(downstream, upstream);
+        assertNotNull(step);
+        assertEquals("upstream", step.getUpstreamProject());
+        assertNull(step.getUpstreamId());
+        assertTrue(step.isEnabled());
+        assertTrue(step.isPermission());
+        assertEquals(1, step.getPossibleVersions().size());
+
+        jenkins.buildAndAssertSuccess(upstream);
+
+        step = ManualStep.getManualStepAggregated(downstream, upstream);
+        assertNotNull(step);
+        assertEquals("upstream", step.getUpstreamProject());
+        assertNull(step.getUpstreamId());
+        assertTrue(step.isEnabled());
+        assertTrue(step.isPermission());
+        assertEquals(2, step.getPossibleVersions().size());
 
     }
 

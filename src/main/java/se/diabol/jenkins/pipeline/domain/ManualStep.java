@@ -86,6 +86,7 @@ public class ManualStep {
                 }
             } else {
                 //TODO get this from configuration of trigger?
+                //TODO merge queued status bug
                 if (!build.isBuilding() && !project.isInQueue() && build.getResult().isWorseThan(Result.UNSTABLE)) {
                     return new ManualStep(upstream.getName(), String.valueOf(upstreamBuild.getNumber()), true, project.hasPermission(Item.BUILD), null);
                 }
@@ -105,6 +106,9 @@ public class ManualStep {
                         versions.put(versionBuild.getDisplayName(), String.valueOf(versionBuild.getNumber()));
                     }
                 }
+            }
+            if (versions.size() == 0) {
+                return new ManualStep(upstream.getName(), null, false, project.hasPermission(Item.BUILD), versions);
             }
             return new ManualStep(upstream.getName(), null, true, project.hasPermission(Item.BUILD), versions);
         }
