@@ -22,11 +22,11 @@ import hudson.model.AbstractProject;
 import jenkins.model.Jenkins;
 import se.diabol.jenkins.pipeline.util.ProjectUtil;
 
+public final class ManualTriggerFactory {
 
-/**
- * Created by patbos on 25/03/14.
- */
-public class ManualTriggerFactory {
+    private ManualTriggerFactory() {
+    }
+
     public static ManualTrigger getManualTrigger(AbstractProject<?, ?> project, AbstractProject<?, ?> downstream) {
 
          BuildPipelineTrigger bppTrigger = downstream.getPublishersList().get(BuildPipelineTrigger.class);

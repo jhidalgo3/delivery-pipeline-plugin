@@ -22,6 +22,8 @@ import hudson.model.FreeStyleProject;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.WithoutJenkins;
+import se.diabol.jenkins.pipeline.test.TestUtil;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -30,6 +32,13 @@ public class ManualTriggerFactoryTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    @Test
+    @WithoutJenkins
+    public void testValidUtilClass() throws Exception {
+        TestUtil.assertUtilityClassWellDefined(ManualTriggerFactory.class);
+    }
+
 
     @Test
     public void testGetTriggerNoRelation() throws Exception {
