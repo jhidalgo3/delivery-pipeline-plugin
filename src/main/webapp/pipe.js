@@ -145,11 +145,11 @@ function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChange
                             "\"><div class=\"task-progress\" style=\"width: " + progress + "%;\"><div class=\"task-content\">" +
                             "<div class=\"task-header\"><div class=\"taskname\"><a href=\"" + task.link + "\">" + htmlEncode(task.name) + "</a></div>";
                         if (task.manual && task.manualStep.enabled) {
-                            html = html + '<div class="task-manual" onclick="view.triggerManual(\'' + task.id + '\', \'' + task.manualStep.upstreamProject + '\', \'' + task.manualStep.upstreamId +'\');">';
+                            html = html + '<div class="task-manual" id="manual-' + id +'" onclick="triggerManual(view, \'' + id + '\', \'' + task.id + '\', \'' + task.manualStep.upstreamProject + '\', \'' + task.manualStep.upstreamId +'\');">';
                             html = html + 'Manual!';
                             html = html + "</div>"
                         }
-                        html = html + '</div><div class="task-details">'
+                        html = html + '</div><div class="task-details">';
                         if (timestamp != "") {
                             html = html + "<span id=\"" + id + ".timestamp\" class='timestamp'>" + timestamp + "</span>"
                         }
@@ -297,6 +297,11 @@ function formatDuration(millis) {
         return minstr + secstr;
     }
     return "0 sec";
+}
+
+function triggerManual(view, taskId, downstreamProject, upstreamProject, upstreamBuild) {
+    Q("#manual-" + taskId).hide();
+    view.triggerManual(downstreamProject, upstreamProject, upstreamBuild);
 }
 
 function htmlEncode(html) {

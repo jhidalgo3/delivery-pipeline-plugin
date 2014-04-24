@@ -73,6 +73,10 @@ public class DeliveryPipelineView extends View {
         super(name);
     }
 
+    public DeliveryPipelineView(String name, ViewGroup owner) {
+        super(name, owner);
+    }
+
     public List<RegExpSpec> getRegexpFirstJobs() {
         return regexpFirstJobs;
     }

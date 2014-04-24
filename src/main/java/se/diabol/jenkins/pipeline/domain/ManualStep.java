@@ -27,7 +27,9 @@ import org.kohsuke.stapler.export.ExportedBean;
 import se.diabol.jenkins.pipeline.util.BuildUtil;
 import se.diabol.jenkins.pipeline.util.ProjectUtil;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @ExportedBean(defaultVisibility = AbstractItem.VISIBILITY)
 public class ManualStep {
@@ -35,17 +37,20 @@ public class ManualStep {
     private String upstreamId;
     private boolean enabled;
     private boolean permission;
+    private Map<String, String> possibleVersions;
 
-    public ManualStep(String upstreamProject, String upstreamId, boolean enabled, boolean permission) {
+    public ManualStep(String upstreamProject, String upstreamId, boolean enabled, boolean permission,
+                      Map<String, String> possibleVersions) {
         this.upstreamProject = upstreamProject;
         this.upstreamId = upstreamId;
         this.enabled = enabled;
         this.permission = permission;
+        this.possibleVersions = possibleVersions;
     }
 
     public static ManualStep resolveManualStep(AbstractProject project) {
         if (isManualTrigger(project)) {
-            return new ManualStep(project.getName(), null, false, project.hasPermission(Item.BUILD));
+            return new ManualStep(project.getName(), null, false, project.hasPermission(Item.BUILD), null);
         } else {
             return null;
         }
@@ -74,21 +79,37 @@ public class ManualStep {
             AbstractProject<?, ?> upstream = (AbstractProject<?, ?>) project.getUpstreamProjects().get(0);
             AbstractBuild upstreamBuild = BuildUtil.match(upstream.getBuilds(), firstBuild);
             if (build == null) {
-                if (upstreamBuild != null && (!upstreamBuild.isBuilding())) {
-                    return new ManualStep(upstream.getName(), String.valueOf(upstreamBuild.getNumber()), true, project.hasPermission(Item.BUILD));
+                if (upstreamBuild != null && !upstreamBuild.isBuilding() && !project.isInQueue()) {
+                    return new ManualStep(upstream.getName(), String.valueOf(upstreamBuild.getNumber()), true, project.hasPermission(Item.BUILD), null);
                 } else {
-                    return new ManualStep(upstream.getName(), null, false, project.hasPermission(Item.BUILD));
+                    return new ManualStep(upstream.getName(), null, false, project.hasPermission(Item.BUILD), null);
                 }
             } else {
                 //TODO get this from configuration of trigger?
                 if (!build.isBuilding() && !project.isInQueue() && build.getResult().isWorseThan(Result.UNSTABLE)) {
-                    return new ManualStep(upstream.getName(), String.valueOf(upstreamBuild.getNumber()), true, project.hasPermission(Item.BUILD));
+                    return new ManualStep(upstream.getName(), String.valueOf(upstreamBuild.getNumber()), true, project.hasPermission(Item.BUILD), null);
                 }
             }
         }
         return null;
     }
 
+    public static ManualStep getManualStepAggregated(AbstractProject project, AbstractProject firstProject) {
+        if (isManualTrigger(project)) {
+            Map<String, String> versions = new HashMap<String, String>();
+            AbstractProject<?, ?> upstream = (AbstractProject<?, ?>) project.getUpstreamProjects().get(0);
+            for (AbstractBuild build: upstream.getBuilds()) {
+                AbstractBuild versionBuild = BuildUtil.getFirstUpstreamBuild(build, firstProject);
+                if (versionBuild != null) {
+                    if (!versions.containsKey(versionBuild.getDisplayName())) {
+                        versions.put(versionBuild.getDisplayName(), String.valueOf(versionBuild.getNumber()));
+                    }
+                }
+            }
+            return new ManualStep(upstream.getName(), null, true, project.hasPermission(Item.BUILD), versions);
+        }
+        return null;
+    }
 
     @Exported
     public String getUpstreamProject() {
@@ -108,5 +129,10 @@ public class ManualStep {
     @Exported
     public boolean isPermission() {
         return permission;
+    }
+
+    @Exported
+    public Map<String, String> getPossibleVersions() {
+        return possibleVersions;
     }
 }
