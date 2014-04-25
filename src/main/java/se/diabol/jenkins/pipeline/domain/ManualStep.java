@@ -86,7 +86,7 @@ public class ManualStep {
                 }
             } else {
                 //TODO get this from configuration of trigger?
-                if (!build.isBuilding() && ProjectUtil.isQueued(project, firstBuild) && build.getResult().isWorseThan(Result.UNSTABLE)) {
+                if (!build.isBuilding() && !ProjectUtil.isQueued(project, firstBuild) && build.getResult().isWorseThan(Result.UNSTABLE)) {
                     return new ManualStep(upstream.getName(), String.valueOf(upstreamBuild.getNumber()), true, project.hasPermission(Item.BUILD), null);
                 }
             }
