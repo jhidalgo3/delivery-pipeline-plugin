@@ -179,7 +179,7 @@ div.stage a:hover {
 }
 
 .QUEUED {
-    border-left: 6px solid #0092ef;
+    border-left: 6px solid darkblue;
 }
 
 .FAILED {
