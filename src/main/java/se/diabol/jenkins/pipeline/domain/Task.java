@@ -18,7 +18,6 @@ If not, see <http://www.gnu.org/licenses/>.
 package se.diabol.jenkins.pipeline.domain;
 
 import hudson.Util;
-import hudson.model.*;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.ItemGroup;
@@ -169,7 +168,6 @@ public class Task extends AbstractItem {
         return ProjectUtil.getProject(task.getId(), context);
     }
 
-    }
 
     @Override
     public String toString() {

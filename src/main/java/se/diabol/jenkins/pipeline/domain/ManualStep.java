@@ -79,15 +79,14 @@ public class ManualStep {
             AbstractProject<?, ?> upstream = (AbstractProject<?, ?>) project.getUpstreamProjects().get(0);
             AbstractBuild upstreamBuild = BuildUtil.match(upstream.getBuilds(), firstBuild);
             if (build == null) {
-                if (upstreamBuild != null && !upstreamBuild.isBuilding() && !project.isInQueue()) {
+                if (upstreamBuild != null && !upstreamBuild.isBuilding() && !ProjectUtil.isQueued(project, firstBuild)) {
                     return new ManualStep(upstream.getName(), String.valueOf(upstreamBuild.getNumber()), true, project.hasPermission(Item.BUILD), null);
                 } else {
                     return new ManualStep(upstream.getName(), null, false, project.hasPermission(Item.BUILD), null);
                 }
             } else {
                 //TODO get this from configuration of trigger?
-                //TODO merge queued status bug
-                if (!build.isBuilding() && !project.isInQueue() && build.getResult().isWorseThan(Result.UNSTABLE)) {
+                if (!build.isBuilding() && ProjectUtil.isQueued(project, firstBuild) && build.getResult().isWorseThan(Result.UNSTABLE)) {
                     return new ManualStep(upstream.getName(), String.valueOf(upstreamBuild.getNumber()), true, project.hasPermission(Item.BUILD), null);
                 }
             }
