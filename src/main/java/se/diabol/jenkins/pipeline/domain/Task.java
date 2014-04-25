@@ -19,6 +19,9 @@ package se.diabol.jenkins.pipeline.domain;
 
 import hudson.Util;
 import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.ItemGroup;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -130,7 +133,7 @@ public class Task extends AbstractItem {
         AbstractProject<?, ?> project = getProject(this, context);
         AbstractBuild build = BuildUtil.match(project.getBuilds(), firstBuild);
 
-        Status taskStatus = SimpleStatus.resolveStatus(project, build);
+        Status taskStatus = SimpleStatus.resolveStatus(project, build, firstBuild);
         String taskLink;
         if (build == null || taskStatus.isIdle() || taskStatus.isQueued()) {
             taskLink = this.getLink();
@@ -151,7 +154,7 @@ public class Task extends AbstractItem {
         AbstractProject<?, ?> taskProject = getProject(this, context);
         AbstractBuild currentBuild = BuildUtil.match(taskProject.getBuilds(), versionBuild);
         if (currentBuild != null) {
-            Status taskStatus = SimpleStatus.resolveStatus(taskProject, currentBuild);
+            Status taskStatus = SimpleStatus.resolveStatus(taskProject, currentBuild, null);
             String taskLink = Util.fixNull(Jenkins.getInstance().getRootUrl()) + currentBuild.getUrl();
             if (taskStatus.isRunning()) {
                 taskLink = Util.fixNull(Jenkins.getInstance().getRootUrl()) + currentBuild.getUrl() + "console";
@@ -166,6 +169,7 @@ public class Task extends AbstractItem {
         return ProjectUtil.getProject(task.getId(), context);
     }
 
+    }
 
     @Override
     public String toString() {
