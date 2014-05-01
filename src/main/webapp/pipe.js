@@ -29,6 +29,15 @@ function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChange
     Q("#" + errorDiv).html('');
     Q("#" + errorDiv).hide();
     var lastUpdate = data.lastUpdated;
+
+    if (data.error) {
+        Q("#" + errorDiv).html('Error: ' + data.error);
+        Q("#" + errorDiv).show();
+    } else {
+        Q("#" + errorDiv).html('');
+        Q("#" + errorDiv).hide();
+    }
+
     if (lastResponse == null || JSON.stringify(data.pipelines) != JSON.stringify(lastResponse.pipelines)) {
 
         for (var z = 0; z < divNames.length; z++) {
@@ -43,7 +52,7 @@ function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChange
         plumb.reset();
         for (var c = 0; c < data.pipelines.length; c++) {
             var component = data.pipelines[c];
-            var html = "<section class='component'>";
+            var html = "<section class='pipeline-component'>";
             html = html + "<h1>" + htmlEncode(component.name) + "</h1>";
             if (!fullscreen) {
                 html = html + '<div class="pipeline-toolbar"><div class="pipeline-toolbar-button button-start" onclick="view.startJob(\'' + component.firstJob + '\');">Start</div></div>'
@@ -69,14 +78,14 @@ function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChange
 
                 var contributors = [];
                 if (pipeline.contributors) {
-		    Q.each(pipeline.contributors, function (index, contributor) {
-			contributors.push(htmlEncode(contributor.name));
-		    });
+                    Q.each(pipeline.contributors, function (index, contributor) {
+                        contributors.push(htmlEncode(contributor.name));
+                    });
                 }
 		
-		if (contributors.length > 0) {
-		    triggered = contributors.join(", ");
-		}
+		        if (contributors.length > 0) {
+		            triggered = triggered + " changes by " + contributors.join(", ");
+		        }
 
                 if (pipeline.aggregated) {
                     html = html + '<h2>Aggregated view</h2>'
@@ -95,7 +104,6 @@ function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChange
 
                 var row = 0;
                 var column = 0;
-                var maxColumn = 0;
 
                 html = html + '<div class="pipeline-row">';
 
@@ -103,20 +111,22 @@ function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChange
                     var stage = pipeline.stages[j];
                     if (stage.row > row) {
 
-                        html = html + '</div><div class="pipeline-row-spacer"></div><div class="pipeline-row">';
+                        html = html + '</div><div class="pipeline-row">';
                         column = 0;
+                        row++;
                     }
 
                     if (stage.column > column) {
                         for (var as = column; as < stage.column; as++) {
                             html = html + '<div class="pipeline-cell"><div class="stage hide"></div></div>';
+                            column++;
                         }
 
                     }
 
                     html = html + '<div class="pipeline-cell">';
                     html = html + '<div id="' + getStageId(stage.id + "", i) + '" class="stage ' + getStageClassName(stage.name) + '">';
-                    html = html + '<div class="stage-header"><span class="stage-name">' + htmlEncode(stage.name) + '</span>';
+                    html = html + '<div class="stage-header"><div class="stage-name">' + htmlEncode(stage.name) + '</div>';
                     if (!pipeline.aggregated) {
                         html = html + '</div>'
                     } else {
@@ -124,7 +134,7 @@ function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChange
                         if (!stageversion) {
                             stageversion = "N/A"
                         }
-                        html = html + ' <span class="stage-version">' + htmlEncode(stageversion) + '</span></div>'
+                        html = html + ' <div class="stage-version">' + htmlEncode(stageversion) + '</div></div>'
                     }
                     for (var k = 0; k < stage.tasks.length; k++) {
                         var task = stage.tasks[k];
@@ -141,7 +151,7 @@ function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChange
                             progress = task.status.percentage;
                         }
 
-                        html = html + "<div id=\"" + id + "\" class=\"task " + task.status.type +
+                        html = html + "<div id=\"" + id + "\" class=\"stage-task " + task.status.type +
                             "\"><div class=\"task-progress\" style=\"width: " + progress + "%;\"><div class=\"task-content\">" +
                             "<div class=\"task-header\"><div class=\"taskname\"><a href=\"" + task.link + "\">" + htmlEncode(task.name) + "</a></div>";
                         if (task.manual && task.manualStep.enabled) {
@@ -151,11 +161,11 @@ function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChange
                         }
                         html = html + '</div><div class="task-details">';
                         if (timestamp != "") {
-                            html = html + "<span id=\"" + id + ".timestamp\" class='timestamp'>" + timestamp + "</span>"
+                            html = html + "<div id=\"" + id + ".timestamp\" class='timestamp'>" + timestamp + "</div>"
                         }
 
                         if (task.status.duration >= 0)
-                            html = html + "<span class='duration'>" + formatDuration(task.status.duration) + "</span>";
+                            html = html + "<div class='duration'>" + formatDuration(task.status.duration) + "</div>";
 
                         html = html + "</div></div></div></div>"
 
@@ -163,12 +173,6 @@ function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChange
                     html = html + "</div>";
                     html = html + '</div>';
                     column++;
-                    if (stage.row > row) {
-                        html = html + '</div>';
-                        row++;
-                        column = 0;
-                    }
-
                 }
                 html = html + '</div>';
 
@@ -181,7 +185,7 @@ function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChange
         var index = 0;
         Q("#pipeline-message").html('');
         lastResponse = data;
-        equalheight(".stage");
+        equalheight(".pipeline-row .stage");
 
         Q.each(data.pipelines, function (i, component) {
             Q.each(component.pipelines, function (j, pipeline) {
@@ -318,7 +322,7 @@ function equalheight(container) {
 
     var currentTallest = 0,
         currentRowStart = 0,
-        rowDivs = [],
+        rowDivs = new Array(),
         $el,
         topPosition = 0;
     Q(container).each(function () {
