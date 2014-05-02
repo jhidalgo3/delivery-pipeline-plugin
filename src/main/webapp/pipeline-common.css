@@ -246,12 +246,11 @@ div.task-details {
 
 div.task-manual {
     float: right;
-    padding-right: 5px;
-    content:url("play.png");
+    content:url("play.gif");
 }
 
 div.button-start {
-    content:url("play.png");
+    content:url("play.gif");
 }
 
 div.pipeline-message {
