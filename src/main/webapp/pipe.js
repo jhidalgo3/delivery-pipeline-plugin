@@ -25,9 +25,7 @@ function updatePipelines(divNames, errorDiv, view, fullscreen, showChanges, time
 }
 
 
-function refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChanges) {
-    Q("#" + errorDiv).html('');
-    Q("#" + errorDiv).hide();
+function refreshPipelines(data, divNames, errorDiv, view, showAvatars, showChanges) {
     var lastUpdate = data.lastUpdated;
 
     if (data.error) {
