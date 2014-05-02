@@ -143,14 +143,16 @@ function refreshPipelines(data, divNames, errorDiv, view, showAvatars, showChang
 
                         tasks.push({id: id, taskId: task.id, buildId: task.buildId});
 
-                        var progress = 0;
+                        var progress = 100;
+                        var progressClass = "task-progress-notrunning";
 
                         if (task.status.percentage) {
                             progress = task.status.percentage;
+                            progressClass = "task-progress-running";
                         }
 
                         html = html + "<div id=\"" + id + "\" class=\"stage-task " + task.status.type +
-                            "\"><div class=\"task-progress\" style=\"width: " + progress + "%;\"><div class=\"task-content\">" +
+                            "\"><div class=\"task-progress " + progressClass + "\" style=\"width: " + progress + "%;\"><div class=\"task-content\">" +
                             "<div class=\"task-header\"><div class=\"taskname\"><a href=\"" + task.link + "\">" + htmlEncode(task.name) + "</a></div>";
                         if (task.manual && task.manualStep.enabled) {
                             html = html + '<div class="task-manual" id="manual-' + id +'" onclick="triggerManual(view, \'' + id + '\', \'' + task.id + '\', \'' + task.manualStep.upstreamProject + '\', \'' + task.manualStep.upstreamId +'\');">';
