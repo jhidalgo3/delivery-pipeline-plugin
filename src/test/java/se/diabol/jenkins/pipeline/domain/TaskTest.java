@@ -64,13 +64,14 @@ public class TaskTest {
     @Test
     public void testGetLatestRunning() throws Exception {
         final OneShotEvent buildStarted = new OneShotEvent();
+        final OneShotEvent buildBuilding = new OneShotEvent();
 
         FreeStyleProject project = jenkins.createFreeStyleProject("test");
         project.getBuildersList().add(new TestBuilder() {
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
                                    BuildListener listener) throws InterruptedException, IOException {
                 buildStarted.signal();
-                Thread.currentThread().wait(3000);
+                buildBuilding.block();
                 return true;
             }
         });
@@ -85,7 +86,8 @@ public class TaskTest {
 
         assertEquals("job/test/1/console", aggregated.getLink());
         assertTrue(aggregated.getStatus().isRunning());
-
+        buildBuilding.signal();
+        jenkins.waitUntilNoActivity();
 
     }
 
