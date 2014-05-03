@@ -52,9 +52,6 @@ function refreshPipelines(data, divNames, errorDiv, view, showAvatars, showChang
             var component = data.pipelines[c];
             var html = "<section class='pipeline-component'>";
             html = html + "<h1>" + htmlEncode(component.name) + "</h1>";
-            if (!fullscreen) {
-                html = html + '<div class="pipeline-toolbar"><div class="pipeline-toolbar-button button-start" onclick="view.startJob(\'' + component.firstJob + '\');">Start</div></div>'
-            }
             if (component.pipelines.length == 0) {
                 html = html + "No builds done yet.";
             }
