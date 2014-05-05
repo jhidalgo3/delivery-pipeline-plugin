@@ -9,8 +9,10 @@
             version-template: 1.0.0-${BUILD_NUMBER}
             set-display-name: true
     publishers:
-      - trigger:
-          project: simple-deploy-CI
+      - trigger-parameterized-builds:
+          - project: "simple-deploy-CI"
+            fail-on-missing: false
+            predefined-parameters: foo=bar
 - job:
     name: 'simple-deploy-CI'
     properties:
@@ -18,8 +20,10 @@
           stage: CI
           task: Deploy
     publishers:
-      - trigger:
-          project: simple-test-CI
+      - trigger-parameterized-builds:
+          - project: "simple-test-CI"
+            fail-on-missing: false
+            predefined-parameters: foo=bar
 
 - job:
     name: 'simple-test-CI'
@@ -28,7 +32,7 @@
           stage: CI
           task: Test
     publishers:
-      - trigger:
+      - pipeline:
           project: simple-deploy-QA
 
 - job:
@@ -38,8 +42,10 @@
           stage: QA
           task: Deploy
     publishers:
-      - trigger:
-          project: simple-test-QA
+      - trigger-parameterized-builds:
+          - project: "simple-test-QA"
+            fail-on-missing: false
+            predefined-parameters: foo=bar
 
 - job:
     name: 'simple-test-QA'
@@ -48,8 +54,8 @@
           stage: QA
           task: Test
     publishers:
-      - trigger:
-          project: simple-deploy-PROD
+      - pipeline:
+          project: "simple-deploy-PROD"
 
 - job:
     name: 'simple-deploy-PROD'
@@ -58,8 +64,10 @@
           stage: PROD
           task: Deploy
     publishers:
-      - trigger:
-          project: simple-test-PROD
+      - trigger-parameterized-builds:
+          - project: "simple-test-PROD"
+            fail-on-missing: false
+            predefined-parameters: foo=bar
 
 - job:
     name: 'simple-test-PROD'
